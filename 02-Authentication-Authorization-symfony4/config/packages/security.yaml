@@ -1,0 +1,43 @@
+security:
+    providers:
+        hwi:
+            id: hwi_oauth.user.provider
+        auth0:
+            id: App\Security\Auth0UserProvider
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        auth0:
+            provider: hwi
+            anonymous: ~
+            pattern: ^/
+            oauth:
+                resource_owners:
+                    auth0: "/login/check-auth0"
+                login_path: /login
+                use_forward: false
+                failure_path: /login
+
+                oauth_user_provider:
+                    service: hwi_oauth.user.provider
+            logout:
+                path:   /logout
+                target: /public
+
+        api:
+            provider: auth0
+            pattern: ^/api
+            stateless: true
+            simple_preauth:
+                authenticator: jwt_auth.jwt_authenticator
+
+        main:
+            anonymous: true
+
+    access_control:
+         - { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
+         - { path: ^/private, roles: ROLE_OAUTH_USER }
+         - { path: ^/api, roles: ROLE_OAUTH_USER }
